@@ -13,6 +13,7 @@ import (
 	"github.com/asobti/kube-monkey/victims"
 	"github.com/asobti/kube-monkey/victims/factory/daemonsets"
 	"github.com/asobti/kube-monkey/victims/factory/deployments"
+	"github.com/asobti/kube-monkey/victims/factory/deploymentconfigs"
 	"github.com/asobti/kube-monkey/victims/factory/statefulsets"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -47,6 +48,15 @@ func EligibleVictims() (eligibleVictims []victims.Victim, err error) {
 			continue
 		}
 		eligibleVictims = append(eligibleVictims, deployments...)
+
+		// Fetch deploymentconfigs
+		deploymentconfigs, err := deploymentconfigs.EligibleDeploymentConfigs(clientset, namespace, filter)
+		if err != nil {
+			//allow pass through to schedule other kinds and namespaces
+			glog.Warningf("Failed to fetch eligible deploymentconfigs for namespace %s due to error: %s", namespace, err.Error())
+			continue
+		}
+		eligibleVictims = append(eligibleVictims, deploymentconfigs...)
 
 		// Fetch statefulsets
 		statefulsets, err := statefulsets.EligibleStatefulSets(clientset, namespace, filter)
